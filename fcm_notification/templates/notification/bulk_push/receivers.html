@@ -1,0 +1,113 @@
+{% extends "notification/base.html" %}
+{% load notification_extras %}
+{% block 'main_content' %}
+<div class="container">
+    <h3 class="my-4">Bulk Notification Details</h3>
+    <table class="table table-bordered table-sm mb-4">
+        <tr>
+            <th>Title</th>
+            <td colspan="3">{{ bulk_request.title }}</td>
+        </tr>
+        <tr>
+            <th>Message</th>
+            <td colspan="3"><a href="{% url 'message_details' bulk_request.message.pk %}">{{ bulk_request.message.title }}</a></td>
+        </tr>
+        <tr>
+            <th>Status</th>
+            <td>{{ bulk_request.get_status_display }}</td>
+            <th>Created at</th>
+            <td>{{ bulk_request.created_at }}</td>
+        </tr>
+    </table>
+    {% if bulk_request.get_status_display == 'PROCESSING' %}
+      <div class="alert alert-info" role="alert">
+        Your uploaded file is still processing. Please refresh the page sometime later to view progress.
+      </div>
+    {% endif %}
+    <h3 class="mb-2 mt-4">Notification receivers
+      <span class="badge badge-secondary">{{ page_obj.paginator.count }}</span>
+    </h3>
+    <div class="row">
+        <div class="col">
+            <form class="form-inline my-3" action="">
+                <label>Mobile</label>
+                {{ search_form.mobile }}
+                <button type="submit" class="btn btn-primary">Search</button>
+            </form>
+        </div>
+        <div class="col text-right my-3">
+          {% if bulk_request.get_status_display != 'PROCESSING' and page_obj %}
+            <a href="{% url 'send_bulk_message' bulk_request.id %}"
+               class="btn btn-primary px-4">Send</a>
+          {% endif %}
+          <a href="{% url 'bulk_message_send_request' bulk_request.id %}"
+                 class="btn btn-info">Send Requests</a>
+        </div>
+    </div>
+
+    {% if page_obj %}
+    <table class="table mt-3">
+        <thead>
+            <tr>
+                <th>Sl No</th>
+                <th>Mobile</th>
+                <th>Status</th>
+                <th>Created at</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for msg_obj in  page_obj %}
+            <tr>
+                <td>{{ page_obj.start_index|add:forloop.counter0 }}</td>
+                <td>{{ msg_obj.mobile }}</td>
+                <td>{{ msg_obj.get_status_display }}</td>
+                <td>{{ msg_obj.created_at }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    
+    {% if page_obj.paginator.num_pages > 1 %}
+    <nav aria-label="Page navigation">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?{% url_replace page=1 %}">&laquo; First</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?{% url_replace page=page_obj.previous_page_number %}">Previous</a>
+            </li>
+            {% else %}
+            <li class="page-item disabled">
+                <a class="page-link" href="#" tabindex="-1" aria-disabled="true">Previous</a>
+            </li>
+            {% endif %}
+
+            {% for p in page_range %}
+            <li class="page-item {% if page_obj.number == p %}disabled{% endif %}">
+                <a class="page-link" href="?{% url_replace page=p %}">{{ p }}</a>
+            </li>
+            {% endfor %}
+            
+            {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?{% url_replace page=page_obj.next_page_number %}">Next</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?{% url_replace page=page_obj.paginator.num_pages %}">Last &raquo;</a>
+            </li>
+            {% else %}
+            <li class="page-item disabled">
+                <a class="page-link" href="#">Next</a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+
+    {% else %}
+      <div class="alert alert-info">No receiver added.</div>
+    {% endif %}
+</div>
+
+{% endblock %}

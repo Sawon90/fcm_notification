@@ -1,0 +1,133 @@
+{% extends "notification/base.html" %}
+{% load static %}
+{% load notification_extras %}
+
+{% block 'extra_head' %}
+<link type="text/css" rel="stylesheet" href="https://unpkg.com/bootstrap-vue@2.21.2/dist/bootstrap-vue.min.css" />
+<link type="text/css" rel="stylesheet" href="{% static 'css/fontawesome-all.min.css' %}" />
+<link type="text/css" rel="stylesheet" href="{% static 'css/send-bulk-notification.css' %}" />
+{% endblock %}
+
+{% block 'extra_footer' %}
+<script>window.jQuery || document.write('<script src="{% static 'js/jquery-3.6.0.min.js' %}"><\/script>')</script>
+<script src="https://unpkg.com/vue@2.6.12/dist/vue.min.js"></script>
+<script src="https://unpkg.com/bootstrap-vue@2.21.2/dist/bootstrap-vue.min.js"></script>
+<script src="https://unpkg.com/axios@0.21.1/dist/axios.min.js"></script>
+<script type="text/javascript">
+axios.defaults.xsrfCookieName = 'csrftoken';
+axios.defaults.xsrfHeaderName = "X-CSRFTOKEN";
+</script>
+<script src="{% static 'js/send-bulk-notification.js' %}"></script>
+{% endblock %}
+
+{% block 'main_content' %}
+  <div class="container mb-4">
+    <h3 class="my-2 pb-1">Send bulk notification</h3>
+    <table class="table table-bordered table-sm mb-4">
+      <tr>
+        <th>Title</th>
+        <td colspan="3">{{ bulk_request.title }}</td>
+      </tr>
+      <tr>
+        <th>Message</th>
+        <td colspan="3">
+          <a href="{% url 'message_details' bulk_request.message.pk %}">{{ bulk_request.message.title }}</a>
+        </td>
+      </tr>
+      <tr>
+        <th>Status</th>
+        <td>{{ bulk_request.get_status_display }}</td>
+        <th>Created at</th>
+        <td>{{ bulk_request.created_at }}</td>
+      </tr>
+    </table>
+    <div id="send-bulk-notification-app">
+      <h4>Set Schedule</h4>
+      <div class="mb-3">
+        <button type="button" class="btn px-5 schedule-btn" @click="scheduleType='ONE_TIME'"
+                :class="{'schedule-btn-active': scheduleType === 'ONE_TIME'}">
+          One Time
+        </button>
+        <button type="button" class="btn px-5 schedule-btn" @click="scheduleType='WEEKLY'"
+                :class="{'schedule-btn-active': scheduleType === 'WEEKLY'}">
+          Weekly
+        </button>
+        <button type="button" class="btn px-5 schedule-btn" @click="scheduleType='MONTHLY'"
+                :class="{'schedule-btn-active': scheduleType === 'MONTHLY'}">
+          Monthly
+        </button>
+      </div>
+
+      <form id="bulk-notification-form" method="post" action="">
+        {% csrf_token %}
+        <input type="hidden" name="schedule_type" :value="scheduleType">
+        <div v-show="scheduleType === 'ONE_TIME'" class="form-group">
+          <label for="oneTimeDateInput">When to send this messages? (Leave empty for immediately send message)</label>
+          <div class="input-group">
+            <input v-model="oneTimeScheduleTime" type="datetime-local" class="form-control" id="oneTimeDateInput"
+                   aria-describedby="dateTimeHelp" name="onetime_send_date" :min="oneTimeMinDate">
+            <div class="input-group-append">
+              <button class="btn btn-outline-secondary" type="button" @click="oneTimeScheduleTime = null">X</button>
+            </div>
+          </div>
+          <small id="dateTimeHelp" class="form-text text-muted">System will send the messages after this time</small>
+        </div>
+
+        <div v-show="scheduleType === 'WEEKLY'" class="form-group">
+          <label for="dateInput">When to send this messages?</label>
+          <div class="input-group">
+            <div v-for="d in weekDays" :key="d.name" class="form-check form-check-inline mr-4">
+              <input class="form-check-input" type="checkbox" :id="'weekDaysCheckbox' + d.day"
+                     :value="d.day" v-model="weeklyScheduleDays" name="weekly_days">
+              <label class="form-check-label" :for="'weekDaysCheckbox' + d.day">[[d.name]]</label>
+            </div>
+          </div>
+        </div>
+
+        <div v-show="scheduleType === 'MONTHLY'" class="form-group">
+          <div>When to send this messages?</div>
+          <div v-for="d in 31" :key="'days' + d" class="ck-button">
+            <label>
+              <input type="checkbox" :value="d" v-model="monthlyScheduleDays" name="monthly_days">
+              <span>[[d]]</span>
+            </label>
+          </div>
+        </div>
+
+        <div v-show="scheduleType === 'WEEKLY' || scheduleType === 'MONTHLY'">
+          <div class="form-group">
+            <div class="input-group">
+              <label class="mr-3 pt-2">[[repeatLabel]]</label>
+              <div class="form-check form-check-inline mr-3">
+                <input class="form-check-input" type="radio" name="should_repeat" id="shouldRepeatYes"
+                       :value="1" v-model="shouldRepeat">
+                <label class="form-check-label" for="shouldRepeatYes">Yes</label>
+              </div>
+              <div class="form-check form-check-inline mr-5">
+                <input class="form-check-input" type="radio" name="should_repeat" id="shouldRepeatNo"
+                       :value="0" v-model="shouldRepeat">
+                <label class="form-check-label" for="shouldRepeatNo">No</label>
+              </div>
+              <label class="mr-2 pt-2">Repeat until:</label>
+              <input v-model="repeatUntil" type="date" class="repeat-date-picker mt-1"
+                     :min="repeatMinDate" name="repeat_until">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="inpScheduleTime">Schedule Time</label>
+            <input v-model="scheduleTime" type="time" class="form-control" id="inpScheduleTime"
+                   name="schedule_time">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="inpChunkDelay">Chunk delay in milliseconds (Enter 0 for no delay)</label>
+          <input v-model="chunkDelay" type="number" min="0" value="0" step="500"
+                 class="form-control" id="inpChunkDelay" name="chunk_delay">
+        </div>
+        <button type="button" class="btn btn-primary" @click="sendBulkNotification">Schedule to send</button>
+      </form>
+
+    </div>
+  </div>
+{% endblock %}

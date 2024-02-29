@@ -1,0 +1,71 @@
+{% extends "notification/base.html" %}
+{% block 'main_content' %}
+  <div class="container">
+    <h3 class="my-2 pb-1">Message Details</h3>
+    <div class="row my-4">
+      <div class="col">
+        <div class="card">
+          <div class="card-body">
+            <div><strong>Message ID:</strong> {{ message.id }}</div>
+            <h5 class="card-title">{{ message.title }}</h5>
+            <h6 class="card-subtitle mb-2 font-weight-bold">{{ message.summary }}</h6>
+            <p class="card-text">{{ message.body|safe }}</p>
+            <div class="d-flex flex-row mb-3">
+              <div>Type: <span class="badge badge-info">{{ message.type }}</span></div>
+              <div class="ml-5">Category: <span class="badge badge-info">{{ message.category }}</span></div>
+            </div>
+            {% if message.type == 'LINK' %}
+              <h5 class="text-muted">Link Details</h5>
+              <dl class="row">
+                <dt class="col-sm-3 col-lg-2">Title</dt>
+                <dd class="col-sm-9 col-lg-10">{{ message.linkmessage.title }}</dd>
+                <dt class="col-sm-3 col-lg-2">Link</dt>
+                <dd class="col-sm-9 col-lg-10">{{ message.linkmessage.link_url }}</dd>
+              </dl>
+            {% elif message.type == 'FILE_UPLOAD' %}
+              <h5 class="text-muted">{{ message.filerequestmessage.title }}</h5>
+              <h6>Requested files</h6>
+              <dl class="row">
+                {% for file in message.filerequestmessage.file_type_request_set.all %}
+                  <dt class="col-sm-3 col-lg-2">{{ file.file_type }}</dt>
+                  <dd class="col-sm-9 col-lg-10">{{ file.title }}</dd>
+                {% endfor %}
+              </dl>
+            {% elif message.type == 'IMAGE_UPLOAD' %}
+              <h5 class="text-muted">{{ message.imagerequestmessage.title }}</h5>
+              <dl class="row">
+                <dt class="col-sm-4">File type</dt>
+                <dd class="col-sm-8">{{ message.imagerequestmessage.file_type }}</dd>
+
+                <dt class="col-sm-4">Minimum files</dt>
+                <dd class="col-sm-8">{{ message.imagerequestmessage.min_files }}</dd>
+
+                <dt class="col-sm-4">Maximum files</dt>
+                <dd class="col-sm-8">{{ message.imagerequestmessage.max_files }}</dd>
+              </dl>
+            {% elif message.type == 'POPUP_MESSAGE' %}
+              <h5 class="text-muted">Popup Message Details</h5>
+              <dl class="row">
+                <dt class="col-sm-3 col-lg-2">Button Text</dt>
+                <dd class="col-sm-9 col-lg-10">{{ message.popupmessage.button_text }}</dd>
+                <dt class="col-sm-3 col-lg-2">Display Type</dt>
+                <dd class="col-sm-9 col-lg-10">{{ message.popupmessage.display_type }}</dd>
+                <dt class="col-sm-3 col-lg-2">Action Type</dt>
+                <dd class="col-sm-9 col-lg-10">{{ message.popupmessage.action_type }}</dd>
+                <dt class="col-sm-3 col-lg-2">Action Data</dt>
+                <dd class="col-sm-9 col-lg-10">{{ message.popupmessage.action_data }}</dd>
+                <dt class="col-sm-3 col-lg-2">Start Date</dt>
+                <dd class="col-sm-9 col-lg-10">{{ message.popupmessage.start_at }}</dd>
+                <dt class="col-sm-3 col-lg-2">Expire Date</dt>
+                <dd class="col-sm-9 col-lg-10">{{ message.popupmessage.expires_at }}</dd>
+                <dt class="col-sm-3 col-lg-2">Delay (in hours)</dt>
+                <dd class="col-sm-9 col-lg-10">{% widthratio message.popupmessage.min_delay 3600 1 %}</dd>
+              </dl>
+            {% endif %}
+          </div>
+        </div>
+        <a href="{% url 'edit_message' message.pk %}" class="mt-2 btn btn-warning">Edit message</a>
+      </div>
+    </div>
+  </div>
+{% endblock %}

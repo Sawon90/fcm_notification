@@ -1,0 +1,36 @@
+{% extends "notification/base.html" %}
+{% load notification_extras %}
+{% block 'main_content' %}
+  <div class="container">
+    {% include 'notification/common/notification_request.html' %}
+    {% include 'notification/common/notification_request_menu_navs.html' with nav='TAG' %}
+
+    {% if object_list %}
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+          <tr>
+            <th>Tag ID</th>
+            <th>Tag Name</th>
+            <th>Tag Description</th>
+            <th>Created At</th>
+          </tr>
+          </thead>
+          <tbody>
+          {% for obj in  object_list %}
+            <tr>
+              <td>{{ obj.id }}</td>
+              <td>{{ obj.tag_name }}</td>
+              <td>{{ obj.tag_description }}</td>
+              <td>{{ obj.created_at }}</td>
+            </tr>
+          {% endfor %}
+          </tbody>
+      </table>
+      </div>
+    {% else %}
+      <div class="alert alert-info mt-3">No tag added to this bulk notification.</div>
+    {% endif %}
+  </div>
+
+{% endblock %}

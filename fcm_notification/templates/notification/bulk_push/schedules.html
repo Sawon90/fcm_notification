@@ -1,0 +1,44 @@
+{% extends "notification/base.html" %}
+{% load notification_extras %}
+{% block 'main_content' %}
+  <div class="container">
+    {% include 'notification/common/notification_request.html' %}
+    {% include 'notification/common/notification_request_menu_navs.html' with nav='SCHEDULE' %}
+
+    {% if object_list %}
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+          <tr>
+            <th>Schedule ID</th>
+            <th>Schedule Type</th>
+            <th>Schedule Time</th>
+            <th>Repeat Days</th>
+            <th>Should Repeat</th>
+            <th>Repeat Until</th>
+            <th>Create Time</th>
+            <th>Created By</th>
+          </tr>
+          </thead>
+          <tbody>
+          {% for obj in  object_list %}
+            <tr>
+              <td>{{ obj.id }}</td>
+              <td>{{ obj.get_schedule_type_display }}</td>
+              <td>{{ obj.schedule_time }}</td>
+              <td>{{ obj.repeat_days }}</td>
+              <td>{{ obj.should_repeat }}</td>
+              <td>{{ obj.repeat_until }}</td>
+              <td>{{ obj.created_at }}</td>
+              <td>{{ obj.scheduled_by }}</td>
+            </tr>
+          {% endfor %}
+          </tbody>
+      </table>
+      </div>
+    {% else %}
+      <div class="alert alert-info mt-3">This message is not scheduled yet.</div>
+    {% endif %}
+  </div>
+
+{% endblock %}

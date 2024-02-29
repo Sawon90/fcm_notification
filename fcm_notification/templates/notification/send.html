@@ -1,0 +1,70 @@
+{% extends "notification/base.html" %}
+{% block 'main_content' %}
+  <div class="container">
+    <h3 class="my-2 pb-1">Send message</h3>
+    <div class="row my-4">
+      <div class="col">
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">{{ msg.title }}</h5>
+            <h6 class="card-subtitle mb-2 font-weight-bold">{{ msg.summary }}</h6>
+            <p class="card-text">{{ msg.body|safe }}</p>
+            <div class="d-flex flex-row">
+              <div class="mb-3">Type: <span class="badge badge-info">{{ msg.type }}</span></div>
+              <div class="mb-3 ml-5">Category: <span class="badge badge-info">{{ msg.category }}</span></div>
+            </div>
+            {% if msg.type == 'LINK' %}
+              <dl class="row">
+                <dt class="col-sm-3">Title</dt>
+                <dd class="col-sm-9">{{ msg.linkmessage.title }}</dd>
+                <dt class="col-sm-3">Link</dt>
+                <dd class="col-sm-9">{{ msg.linkmessage.link_url }}</dd>
+              </dl>
+            {% elif msg.type == 'FILE_UPLOAD' %}
+              <h5 class="text-muted">{{ msg.filerequestmessage.title }}</h5>
+              <h6>Requested files</h6>
+              <dl class="row">
+                {% for file in msg.filerequestmessage.file_type_request_set.all %}
+                  <dt class="col-sm-3">{{ file.file_type }}</dt>
+                  <dd class="col-sm-9">{{ file.title }}</dd>
+                {% endfor %}
+              </dl>
+            {% elif msg.type == 'IMAGE_UPLOAD' %}
+              <h5 class="text-muted">{{ msg.imagerequestmessage.title }}</h5>
+              <dl class="row">
+                <dt class="col-sm-4">File type</dt>
+                <dd class="col-sm-8">{{ msg.imagerequestmessage.file_type }}</dd>
+
+                <dt class="col-sm-4">Minimum files</dt>
+                <dd class="col-sm-8">{{ msg.imagerequestmessage.min_files }}</dd>
+
+                <dt class="col-sm-4">Maximum files</dt>
+                <dd class="col-sm-8">{{ msg.imagerequestmessage.max_files }}</dd>
+              </dl>
+            {% endif %}
+          </div>
+        </div>
+        <a href="{% url 'edit_message' msg.pk %}" class="mt-2 btn btn-warning">Edit message</a>
+      </div>
+      <div class="col">
+        <div class="alert alert-info">
+          To send notification to a single user, enter user mobile number below.
+        </div>
+        <form class="" action="" method="post" enctype="multipart/form-data">
+          {% csrf_token %}
+          <div class="form-group">
+            <label>Mobile number of the app user</label>
+            {{ form.mobile }}
+            {% if form.mobile.errors %}
+              {% for error in form.mobile.errors %}
+                <div class="text-danger small mb-2">{{ error }}</div>
+              {% endfor %}
+            {% endif %}
+          </div>
+          <button type="submit" class="btn btn-primary px-4">Send</button>
+          <a href="{% url 'push_message_list' %}" class="btn btn-secondary">Cancel</a>
+        </form>
+      </div>
+    </div>
+  </div>
+{% endblock %}

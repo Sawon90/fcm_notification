@@ -1,0 +1,65 @@
+{% extends "notification/base.html" %}
+
+{% block 'extra_head' %}
+<link type="text/css" rel="stylesheet" href="https://unpkg.com/select2@4.1.0-rc.0/dist/css/select2.min.css" />
+<style type="text/css">
+.select2-search__field {
+  height: 24px !important;
+}
+</style>
+{% endblock %}
+
+{% block 'extra_footer' %}
+<script src="https://unpkg.com/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script type="text/javascript">
+$(document).ready(function() {
+    $('#{{ form.receiving_tags.id_for_label }}').select2({
+        placeholder: 'Select one or more target group',
+        closeOnSelect: false,
+        allowClear: true
+    });
+});
+</script>
+{% endblock %}
+
+{% block 'main_content' %}
+  <div class="container">
+    <h3 class="my-2 pb-1">Create TG notification</h3>
+    <div class="row my-4">
+      <div class="col">
+        <form class="" action="" method="post" enctype="multipart/form-data">
+          {% csrf_token %}
+          <div class="form-group">
+            <label>Title of the campaign</label>
+            {{ form.title }}
+            {% if form.title.errors %}
+              {% for error in form.title.errors %}
+                <div class="text-danger small mb-2">{{ error }}</div>
+              {% endfor %}
+            {% endif %}
+          </div>
+          <div class="form-group">
+            <label>Select the message to send</label>
+            {{ form.message }}
+            {% if form.message.errors %}
+              {% for error in form.message.errors %}
+                <div class="text-danger small mb-2">{{ error }}</div>
+              {% endfor %}
+            {% endif %}
+          </div>
+          <div class="form-group">
+            <label>Select Receiver Tag</label>
+            {{ form.receiving_tags }}
+            {% if form.receiving_tags.errors %}
+              {% for error in form.receiving_tags.errors %}
+                <div class="text-danger small mb-2">{{ error }}</div>
+              {% endfor %}
+            {% endif %}
+          </div>
+          <input type="hidden" name="receiver_type" value="TG">
+          <button type="submit" class="btn btn-primary px-4">Submit</button>
+        </form>
+      </div>
+    </div>
+  </div>
+{% endblock %}

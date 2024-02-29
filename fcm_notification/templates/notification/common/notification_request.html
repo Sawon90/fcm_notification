@@ -1,0 +1,29 @@
+<h3 class="my-4">Bulk Notification Details</h3>
+<table class="table table-bordered table-sm mb-4">
+  <tr>
+    <th>Title</th>
+    <td colspan="3">{{ bulk_request.title }}</td>
+  </tr>
+  <tr>
+    <th>Message</th>
+    <td colspan="3">
+      <a href="{% url 'message_details' bulk_request.message.pk %}">
+        {{ bulk_request.message.title }}
+      </a>
+    </td>
+  </tr>
+  <tr>
+    <th>Status</th>
+    <td>{{ bulk_request.get_status_display }}</td>
+    <th>Created at</th>
+    <td>{{ bulk_request.created_at }}</td>
+  </tr>
+  <tr>
+    <th>Created By</th>
+    <td>{{ bulk_request.created_by }}</td>
+    {% if bulk_request.receiver_type == 'FILE' %}
+      <th>Total Receiver</th>
+      <td>{{ bulk_request.receiver_count }}</td>
+    {% endif %}
+  </tr>
+</table>

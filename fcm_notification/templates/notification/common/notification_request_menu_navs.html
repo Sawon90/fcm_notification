@@ -1,0 +1,50 @@
+<div class="row my-4">
+<div class="col">
+  <h3>
+    {% if nav == 'SEND_REQUEST' %}
+      Bulk Message Send Requests
+    {% elif nav == 'SCHEDULE' %}
+      Bulk Message Schedules
+    {% elif nav == 'TAG' %}
+      Bulk Message Tags
+    {% endif %}
+  </h3>
+</div>
+{% if bulk_request.get_status_display == 'READY' %}
+  <div class="col text-right">
+    <a href="{% url 'send_bulk_message' bulk_request.pk %}" class="btn btn-primary">
+      {% if object_list and nav != 'TAG' %}
+        Send Again
+      {% else %}
+        Send
+      {% endif %}
+    </a>
+    {% if bulk_request.receiver_type == 'FILE' %}
+      <a href="{{ file_url }}" class="btn btn-info">Download Receiver List</a>
+    {% endif %}
+  </div>
+{% endif %}
+</div>
+
+<ul class="nav nav-tabs">
+  <li class="nav-item">
+    <a class="nav-link {% if nav == 'SEND_REQUEST' %}active{% endif %}"
+       href="{% if nav == 'SEND_REQUEST' %}#{% else %}{% url 'bulk_message_send_request' bulk_request.pk %}{% endif %}">
+      Send Requests
+    </a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link {% if nav == 'SCHEDULE' %}active{% endif %}"
+       href="{% if nav == 'SCHEDULE' %}#{% else %}{% url 'bulk_message_schedules' bulk_request.pk %}{% endif %}">
+      Schedules
+    </a>
+  </li>
+  {% if bulk_request.receiver_type == 'TG' %}
+  <li class="nav-item">
+    <a class="nav-link {% if nav == 'TAG' %}active{% endif %}"
+       href="{% if nav == 'TAG' %}#{% else %}{% url 'bulk_message_tags' bulk_request.pk %}{% endif %}">
+      Tags
+    </a>
+  </li>
+  {% endif %}
+</ul>

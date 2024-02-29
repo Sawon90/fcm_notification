@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% load static %}
+{% block 'content' %}
+<div class="container">
+        <h1>Tallykhata Admin Panel</h1>
+        <p class="lead">Portal for Tallykhata administration.</p>
+
+        <h2 class="my-4">Start from here</h2>
+        
+        <div class="row">
+            {% if user.is_authenticated %} 
+            {% if perms.notification.add_pushmessage %}
+            <div class="col-md-4 mb-4">
+                <div class="card">
+                    <img src="{% static 'images/message.png' %}" class="card-img-top" alt="Messages">
+                    <div class="card-body">
+                        <h5 class="card-title">Messages</h5>
+                        <p class="card-text">Create and send push messages to app users. See list of previous messages and resend them.</p>
+                        <a href="{% url 'push_message_list' %}" class="btn btn-primary">Go</a>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            <div class="col-md-4 mb-4">
+                <div class="card">
+                    <img src="{% static 'images/analysis.jpg' %}" class="card-img-top" alt="Data">
+                    <div class="card-body">
+                        <h5 class="card-title">View data</h5>
+                        <p class="card-text">View app users data and other reports from here. Manage the authentication, authorization and other properties.</p>
+                        <a href="/admin" class="btn btn-primary">Go</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4 mb-4">
+                <div class="card">
+                    <img src="{% static 'images/browse.jpg' %}" class="card-img-top" alt="Website">
+                    <div class="card-body">
+                        <h5 class="card-title">Website</h5>
+                        <p class="card-text">Looking for the Tallykhata website instead? Go to website. The playstore link is also provided in the website.</p>
+                        <a href="https://www.tallykhata.com/" class="btn btn-primary" target="_blank">Go</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4 mb-4">
+                <div class="card">
+                    <img src="{% static 'images/support.jpg' %}" class="card-img-top" alt="Support">
+                    <div class="card-body">
+                        <h5 class="card-title">Customer care</h5>
+                        <p class="card-text">Investigate common customer issues and perform specific actions.</p>
+                        <a href="{% url 'support_home' %}" class="btn btn-primary">Go</a>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="col-md-4 mb-4">
+                <div class="card">
+                    <img src="{% static 'images/lock.jpg' %}" class="card-img-top" alt="Login">
+                    <div class="card-body">
+                        <h5 class="card-title">Login</h5>
+                        <p class="card-text">You are not logged in yet. Please login first to get access to the portal.</p>
+                        <a href="/admin/login?next=/" class="btn btn-primary">Go</a>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}

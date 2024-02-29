@@ -1,0 +1,22 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Tallykhata Admin Panel</title>
+
+    <!-- Bootstrap core CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/bootstrap@4.6.0/dist/css/bootstrap.min.css">
+    <script src="https://unpkg.com/jquery@3.6.0/dist/jquery.min.js" type="text/javascript"></script>
+    <script src="https://unpkg.com/bootstrap@4.6.0/dist/js/bootstrap.min.js" type="text/javascript"></script>
+    {% block 'extra_head' %}{% endblock %}
+</head>
+
+<body>
+    {% block 'content' %}{% endblock %}
+    {% block 'extra_footer' %}{% endblock %}
+</body>
+
+</html>

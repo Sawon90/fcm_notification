@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block 'content' %}
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+  <div class="container">
+    <a class="navbar-brand" href="/">Tallykhata</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExample07" aria-controls="navbarsExample07" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarsExample07">
+    {% with request.resolver_match.url_name as url_name %}
+      <ul class="navbar-nav mr-auto">
+        <li class="nav-item {% if url_name == 'push_message_list' %}active{% endif %}">
+          <a class="nav-link" href="{% url 'push_message_list' %}">Messages</a>
+        </li>
+        <li class="nav-item {% if url_name == 'create_push_message' %}active{% endif %}">
+          <a class="nav-link" href="{% url 'create_push_message' %}">New Message</a>
+        </li>
+        <li class="nav-item {% if url_name == 'bulk_message_list' %}active{% endif %}">
+          <a class="nav-link" href="{% url 'bulk_message_list' %}">Bulk Notification</a>
+        </li>
+        <li class="nav-item {% if url_name == 'tg_notification_list' %}active{% endif %}">
+          <a class="nav-link" href="{% url 'tg_notification_list' %}">TG Notification</a>
+        </li>
+      </ul>
+      <a class="navbar-nav my-2 my-sm-0 text-light" href="{% url 'admin:logout' %}">Logout</a>
+    {% endwith %}
+    </div>
+  </div>
+</nav>
+{% block 'main_content' %}{% endblock %}
+{% endblock %}

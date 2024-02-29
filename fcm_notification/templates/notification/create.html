@@ -1,0 +1,461 @@
+{% extends "notification/base.html" %}
+{% load static %}
+
+{% block 'extra_head' %}
+<link type="text/css" rel="stylesheet" href="https://unpkg.com/bootstrap-vue@2.21.2/dist/bootstrap-vue.min.css" />
+<link type="text/css" rel="stylesheet" href="{% static 'css/fontawesome-all.min.css' %}" />
+<link type="text/css" rel="stylesheet" href="{% static 'css/create-message.css' %}" />
+{% endblock %}
+
+{% block 'extra_footer' %}
+<script>window.jQuery || document.write('<script src="{% static 'js/jquery-3.6.0.min.js' %}"><\/script>')</script>
+<script src="https://unpkg.com/vue@2.6.12/dist/vue.min.js"></script>
+<script src="https://unpkg.com/bootstrap-vue@2.21.2/dist/bootstrap-vue.min.js"></script>
+<script src="https://unpkg.com/axios@0.21.1/dist/axios.min.js"></script>
+<script src="https://unpkg.com/quill@1.3.7/dist/quill.min.js"></script>
+<script src="https://unpkg.com/vue2-editor@2.10.2/dist/vue2-editor.umd.js"></script>
+<script src="{% static 'js/vue-quill-editor.js' %}"></script>
+<script type="text/javascript">
+axios.defaults.xsrfCookieName = 'csrftoken';
+axios.defaults.xsrfHeaderName = "X-CSRFTOKEN";
+</script>
+<script src="{% static 'js/create-message.js' %}"></script>
+{% endblock %}
+
+{% block 'main_content' %}
+<div id="create-message-app" class="container-fluid" v-cloak>
+
+  <!-- App Spinner -->
+  <div class="spinner-overlay" v-show="showSpinner">
+    <div class="d-flex justify-content-center align-items-center w-100 h-100">
+      <div class="spinner-border text-primary app-spinner" role="status">
+        <span class="sr-only">Loading...</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-6 py-4">
+      <div role="tablist">
+
+        <!-- Basic Section -->
+        <b-card no-body class="rounded-0">
+          <b-card-header header-tag="header" class="p-1" role="tab">
+            <b-button block v-b-toggle.accordion-basic variant="light" size="sm"
+                      @click="accordionClicked('basic')" class="text-left text-dark">
+              Basic
+            </b-button>
+          </b-card-header>
+          <b-collapse id="accordion-basic" v-model="showBasic"
+                      accordion="create-message-accordion" role="tabpanel">
+            <b-card-body>
+              <b-form @submit.prevent="gotoNextAccordion('advance')">
+                <b-form-group id="basicTitleInputGroup" label="Title"
+                    label-for="inpBasicTitle" description="* Required">
+                  <b-form-input id="inpBasicTitle" v-model="basicData.title" type="text" required></b-form-input>
+                </b-form-group>
+
+                <b-form-group id="basicSummaryInputGroup" label="Summary"
+                              label-for="inpBasicSummary" description="* Required">
+                  <b-form-textarea id="inpBasicSummary" v-model="basicData.summary" rows="2"
+                                   max-rows="6" required>
+                  </b-form-textarea>
+                </b-form-group>
+                <b-form-group id="basicThumbnailInputGroup" label="Thumbnail image (optional)"
+                              label-for="basicThumbnailImg">
+                  <b-form-file id="basicThumbnailImg" v-model="basicData.thumbnailImg"
+                      placeholder="Choose a file or drop it here..." drop-placeholder="Drop file here..."
+                      accept="image/*">
+                  </b-form-file>
+                </b-form-group>
+                <b-form-group id="basicMessageCategoryGroup" label="Message Category"
+                              label-for="inpBasicMessageCategory">
+                  <b-form-radio-group id="inpBasicMessageCategory" v-model="basicData.messageCategory"
+                                      name="messageCategory" required>
+                    <b-form-radio value="GENERIC">Generic</b-form-radio>
+                    <b-form-radio value="CUSTOM">Custom</b-form-radio>
+                  </b-form-radio-group>
+                </b-form-group>
+                <b-button type="submit" class="px-4" variant="primary">Next</b-button>
+              </b-form>
+            </b-card-body>
+          </b-collapse>
+        </b-card>
+
+        <!-- Advance Section -->
+        <b-card no-body class="rounded-0">
+          <b-card-header header-tag="header" class="p-1" role="tab">
+            <b-button block v-b-toggle.accordion-advance variant="light" size="sm"
+                      @click="accordionClicked('advance')" class="text-left text-dark">
+              Advanced
+            </b-button>
+          </b-card-header>
+          <b-collapse id="accordion-advance" v-model="showAdvance"
+                      accordion="create-message-accordion" role="tabpanel">
+            <b-card-body>
+              <b-form @submit.prevent="gotoNextAccordion('details')">
+                <b-form-group id="basicMsgBodyInputGroup" label="Message body"
+                              label-for="inpBasicMsgBody" description="* Required">
+                  <template v-slot:label>
+                    <label>Message body</label>
+                    <button type="button" @click="showRawMessageBody=!showRawMessageBody" class="btn btn-info btn-sm ml-3">Toggle Editor</button>
+                  </template>
+                  <b-form-textarea v-show="showRawMessageBody" :value="basicData.messageBody" rows="8" max-rows="8" readonly></b-form-textarea>
+                  <vue-editor v-show="!showRawMessageBody" v-model="basicData.messageBody"></vue-editor>
+                </b-form-group>
+
+                <b-form-group id="advanceFullImgInputGroup" label="Full image (optional)"
+                              label-for="advanceFullImg">
+                  <b-form-file id="advanceFullImg" v-model="advanceData.fullImg"
+                               placeholder="Choose a file or drop it here..." drop-placeholder="Drop file here..."
+                               accept="image/*">
+                  </b-form-file>
+                </b-form-group>
+                <b-form-group id="advanceMessageInputGroup" label="Message type"
+                              label-for="inpAdvanceMessageType">
+                  <b-form-radio-group id="inpAdvanceMessageType" v-model="advanceData.messageType"
+                                      name="messageType" required>
+                    <b-form-radio value="INFO">General</b-form-radio>
+                    <b-form-radio value="LINK">Link</b-form-radio>
+<!--                    <b-form-radio value="IMAGE_UPLOAD">Image request</b-form-radio>-->
+                    <b-form-radio value="FILE_UPLOAD">File request</b-form-radio>
+                    <b-form-radio value="POPUP_MESSAGE">Popup message</b-form-radio>
+                  </b-form-radio-group>
+                </b-form-group>
+                <b-button type="submit" class="px-4" variant="primary">Next</b-button>
+              </b-form>
+            </b-card-body>
+          </b-collapse>
+        </b-card>
+
+        <!-- Details Section -->
+        <b-card no-body class="rounded-0">
+          <b-card-header header-tag="header" class="p-1" role="tab">
+            <b-button block v-b-toggle.accordion-details variant="light" size="sm"
+                      @click="accordionClicked('details')" class="text-left text-dark">
+              Details
+            </b-button>
+          </b-card-header>
+          <b-collapse id="accordion-details" v-model="showDetails"
+                      accordion="create-message-accordion" role="tabpanel">
+            <b-card-body>
+              <!-- For general no form require -->
+              <b-card-text v-if="advanceData.messageType === 'INFO'">
+                <div>No details required for general message.</div>
+                <b-button type="button" class="px-4 mt-3" variant="primary" @click="menu='confirm'">Next</b-button>
+              </b-card-text>
+
+              <!-- Link input form -->
+              <b-form v-else-if="advanceData.messageType === 'LINK'" @submit.prevent="gotoNextAccordion('confirm')">
+                <b-form-group id="detailsLinkTitleInputGroup" label="Title"
+                              label-for="inpDetailsLinkTitle" description="* Required">
+                  <b-form-input id="inpDetailsLinkTitle" v-model="linkData.title" type="text" required></b-form-input>
+                </b-form-group>
+                 <b-form-group id="detailsLinkUrlTypeInputGroup" label="URL Type" label-for="inpDetailsLinkUrlType">
+                   <b-form-radio-group id="inpDetailsLinkUrlType" v-model="linkData.urlType">
+                     <b-form-radio value="INTERNAL">Internal</b-form-radio>
+                     <b-form-radio value="EXTERNAL">External</b-form-radio>
+                   </b-form-radio-group>
+                 </b-form-group>
+                </b-form-group>
+                <b-form-group id="detailsLinkUrlInputGroup" label="URL"
+                              label-for="inpDetailsLinkUrl" description="* Required">
+                  <b-form-input id="inpDetailsLinkUrl" v-model="linkData.url" type="text" required></b-form-input>
+                </b-form-group>
+                <b-button type="submit" class="px-4" variant="primary">Next</b-button>
+              </b-form>
+
+              <!-- Image request form -->
+              <b-form v-else-if="advanceData.messageType === 'IMAGE_UPLOAD'" @submit.prevent="gotoNextAccordion('confirm')">
+                <b-form-row>
+                  <b-form-group id="imageRequestTitleInputGroup" label="Title" class="col-md-7"
+                                label-for="inpImgReqTitle" description="* Required">
+                    <b-form-input id="inpImgReqTitle" v-model="imgRequestData.title" type="text" required></b-form-input>
+                  </b-form-group>
+                  <b-form-group id="imgReqFileTypeInputGroup" label="File type" class="col-md-5"
+                                label-for="inpImgReqFileType" description="* Required">
+                    <b-form-select id="inpImgReqFileType" v-model="imgRequestData.fileType" required>
+                      <b-form-select-option :value="null">-----</b-form-select-option>
+                      <b-form-select-option v-for="t in fileTypes" :value="t.id" :key="t.id">[[t.name]]</b-form-select-option>
+                    </b-form-select>
+                  </b-form-group>
+                </b-form-row>
+                <b-form-row>
+                  <b-form-group id="imgReqMinImgInputGroup" label="Minimum images" class="col-md-3"
+                                label-for="inpImgReqMinImg">
+                    <b-form-select id="inpImgReqMinImg" v-model="imgRequestData.minImages">
+                      <b-form-select-option :value="null">-----</b-form-select-option>
+                      <b-form-select-option v-for="i in 20" :value="i" :key="i">[[i]]</b-form-select-option>
+                    </b-form-select>
+                  </b-form-group>
+                  <b-form-group id="imgReqMaxImgInputGroup" label="Maximum images" class="col-md-3"
+                                label-for="inpImgReqMaxImg">
+                    <b-form-select id="inpImgReqMaxImg" v-model="imgRequestData.maxImages">
+                      <b-form-select-option :value="null">-----</b-form-select-option>
+                      <b-form-select-option v-for="i in 20" :value="i" :key="i">[[i]]</b-form-select-option>
+                    </b-form-select>
+                  </b-form-group>
+                  <b-form-group id="imgReqResolutionInputGroup" label="Resolution" class="col-md-3"
+                                label-for="inpImgReqResolution">
+                    <b-form-select id="inpImgReqResolution" v-model="imgRequestData.resolution">
+                      <b-form-select-option :value="null">-----</b-form-select-option>
+                      <b-form-select-option value="LOW">Low</b-form-select-option>
+                      <b-form-select-option value="MEDIUM">Medium</b-form-select-option>
+                      <b-form-select-option value="HIGH">High</b-form-select-option>
+                    </b-form-select>
+                  </b-form-group>
+                  <b-form-group id="imgReqIsLiveInputGroup" label="Is Live" class="col-md-3 inline-form-checkbox"
+                                label-for="inpImgReqIsLive" label-sr-only>
+                    <b-form-checkbox id="inpImgReqIsLive" v-model="imgRequestData.isLive">Is Live</b-form-checkbox>
+                  </b-form-group>
+                </b-form-row>
+                <b-form-group id="imgReqDescriptionInputGroup" label="Description"
+                              label-for="inpImgReqDescription">
+                  <b-form-textarea id="inpImgReqDescription" v-model="imgRequestData.description" rows="2"
+                                   max-rows="6">
+                  </b-form-textarea>
+                </b-form-group>
+                <b-button type="submit" class="px-4" variant="primary">Next</b-button>
+              </b-form>
+
+              <!-- File request section -->
+              <div v-else-if="advanceData.messageType === 'FILE_UPLOAD'">
+                <b-form-group id="fileRequestTitleInputGroup" label="Title"
+                              label-for="inpFileReqTitle">
+                  <b-form-input id="inpFileReqTitle" v-model="fileRequestData.title" type="text" required></b-form-input>
+                </b-form-group>
+                <label>Required File</label>
+                <div class="table-responsive">
+                  <table class="table table-bordered table-hover">
+                    <thead>
+                    <tr>
+                      <th scope="col">#</th>
+                      <th scope="col">File Type</th>
+                      <th scope="col">Resolution</th>
+                      <th scope="col">Is Live</th>
+                      <th scope="col">Title</th>
+                      <th scope="col"></th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr v-for="(row, index) in fileRequestData.files" :key="row.fileType + row.title">
+                      <th scope="row">[[index]]</th>
+                      <td>[[row.file_type]]</td>
+                      <td>[[row.resolution]]</td>
+                      <td>[[row.is_live ? 'Yes' : 'No']]</td>
+                      <td>[[row.title]]</td>
+                      <td>
+                        <button class="btn btn-link btn-light text-danger py-0 text-decoration-none" @click="deleteFileReqType(index)">
+                          <i class="fas fa-times"></i>
+                        </button>
+                      </td>
+                    </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <label class="font-weight-bold">Add File</label>
+                <b-form @submit.prevent="addFileRequestType">
+                  <b-form-row>
+                    <b-form-group id="fileReqFileTypeInputGroup" label="File type" class="col-md-3"
+                                  label-for="inpFileReqFileType" description="* Required">
+                      <b-form-select id="inpFileReqFileType" v-model="addFileReqData.fileType" required>
+                        <b-form-select-option :value="null">-----</b-form-select-option>
+                        <b-form-select-option v-for="t in fileTypes" :value="t.id" :key="t.id">[[t.name]]</b-form-select-option>
+                      </b-form-select>
+                    </b-form-group>
+                    <b-form-group id="fileReqResolutionInputGroup" label="Resolution" class="col-md-3"
+                                  label-for="inpFileReqResolution" description="* Required">
+                      <b-form-select id="inpFileReqResolution" v-model="addFileReqData.resolution" required>
+                        <b-form-select-option :value="null">-----</b-form-select-option>
+                        <b-form-select-option value="LOW">Low</b-form-select-option>
+                        <b-form-select-option value="MEDIUM">Medium</b-form-select-option>
+                        <b-form-select-option value="HIGH">High</b-form-select-option>
+                      </b-form-select>
+                    </b-form-group>
+                    <b-form-group id="fileReqIsLiveInputGroup" label="Is Live" class="col-md-2 inline-form-checkbox"
+                                  label-for="inpFileReqIsLive" label-sr-only>
+                      <b-form-checkbox id="inpFileReqIsLive" v-model="addFileReqData.isLive">Is Live</b-form-checkbox>
+                    </b-form-group>
+                    <b-form-group id="fileRequestAddTitleInputGroup" label="Title" class="col-md-4"
+                                  label-for="inpAddFileReqTitle" description="* Required">
+                      <b-form-input id="inpAddFileReqTitle" v-model="addFileReqData.title" type="text" required></b-form-input>
+                    </b-form-group>
+                  </b-form-row>
+                  <b-form-group id="fileRequestHintInputGroup" label="Hint"
+                                label-for="inpFileReqHint">
+                    <b-form-textarea id="inpFileReqHint" v-model="addFileReqData.description" rows="2" max-rows="6">
+                    </b-form-textarea>
+                  </b-form-group>
+                  <b-button type="submit" class="px-4 mb-2" variant="success">Add</b-button>
+                </b-form>
+                <b-button type="button" class="px-4" variant="primary" @click="menu='confirm'"
+                          :disabled="fileRequestData.files.length <= 0">Next</b-button>
+                <span class="text-danger" v-if="fileRequestData.files.length <= 0">Please add at least one file</span>
+              </div>
+
+              <!-- Popup message details -->
+              <div v-else-if="advanceData.messageType === 'POPUP_MESSAGE'">
+                <b-form @submit.prevent="gotoNextAccordion('confirm')">
+                  <b-form-group id="popupButtonTextInputGroup" label="Button text" label-for="popupButtonText">
+                    <b-form-input id="popupButtonText" v-model="popupData.buttonText" type="text"
+                      placeholder="Enter button text" required></b-form-input>
+                  </b-form-group>
+                  <b-form-group id="popupDisplayTypeInputGroup" label="Display type" label-for="popupDisplayType">
+                    <b-form-select id="popupDisplayType" v-model="popupData.displayType" required>
+                      <b-form-select-option :value="null">-----</b-form-select-option>
+                      <b-form-select-option value="COMPLETE_MESSAGE">Complete Message</b-form-select-option>
+                      <b-form-select-option value="IMAGE_MESSAGE">Image Message</b-form-select-option>
+                    </b-form-select>
+                  </b-form-group>
+                  <b-form-group id="popupActionTypeInputGroup" label="Action type" label-for="popupActionType">
+                    <b-form-select id="popupActionType" v-model="popupData.actionType" required>
+                      <b-form-select-option :value="null">-----</b-form-select-option>
+                      <b-form-select-option value="OPEN_URL">Open URL</b-form-select-option>
+                      <b-form-select-option value="OPEN_ACTIVITY">Open Activity</b-form-select-option>
+                      <b-form-select-option value="DISMISS">Dismiss</b-form-select-option>
+                    </b-form-select>
+                  </b-form-group>
+                  <b-form-group v-show="popupData.actionType === 'OPEN_URL'" id="popupUrlTypeInputGroup"
+                                label="URL Type" label-for="popupLinkUrlType">
+                   <b-form-radio-group id="popupLinkUrlType" v-model="popupData.linkType">
+                     <b-form-radio value="INTERNAL">Internal</b-form-radio>
+                     <b-form-radio value="EXTERNAL">External</b-form-radio>
+                   </b-form-radio-group>
+                 </b-form-group>
+                  <b-form-group v-show="popupData.actionType === 'OPEN_URL' || popupData.actionType === 'OPEN_ACTIVITY'"
+                                id="popupActionDataInputGroup" :label="popupActionDataLabel" label-for="popupActionData">
+                    <b-form-input id="popupActionData" v-model="popupData.actionData" type="text"
+                      :placeholder="popupActionDataPlaceholder" :required="popupData.actionType != 'DISMISS'"></b-form-input>
+                  </b-form-group>
+                  <b-form-group id="popupStartDateInputGroup" label="Start date" label-for="popupStartDate">
+                    <b-form-row>
+                      <b-col>
+                        <b-form-datepicker id="popupStartDate" v-model="popupData.startDate" locale="en"
+                                           :date-format-options="{year: 'numeric', month: 'short', day: '2-digit'}"
+                                           today-button reset-button close-button :min="new Date()"
+                                           :max="popupStartMaxDate" :state="popupData.startDate != null">
+                        </b-form-datepicker>
+                      </b-col>
+                      <b-col>
+                        <b-form-timepicker v-model="popupData.startTime" locale="en" now-button reset-button>
+                        </b-form-timepicker>
+                      </b-col>
+                    </b-form-row>
+                  </b-form-group>
+                  <b-form-group id="popupExpireDateInputGroup" label="Expire date" label-for="popupExpireDate">
+                    <b-form-row>
+                      <b-col>
+                        <b-form-datepicker id="popupExpireDate" v-model="popupData.expireDate" locale="en"
+                                           :date-format-options="{year: 'numeric', month: 'short', day: '2-digit'}"
+                                           today-button reset-button close-button :min="popupExpireMinDate"
+                                           :state="popupData.expireDate != null">
+                        </b-form-datepicker>
+                      </b-col>
+                      <b-col>
+                        <b-form-timepicker v-model="popupData.expireTime" locale="en" now-button reset-button>
+                        </b-form-timepicker>
+                      </b-col>
+                    </b-form-row>
+                  </b-form-group>
+                  <b-form-group id="popupDelayIntervalInputGroup" label="Delay (in hours)" label-for="popupDelayInterval">
+                    <b-form-input id="popupDelayInterval" v-model="popupData.delayInterval" type="number"
+                      placeholder="Enter delay (in seconds)" min="0" max="8760" required></b-form-input>
+                  </b-form-group>
+                  <b-button type="submit" class="px-4" variant="primary">Next</b-button>
+                </b-form>
+              </div>
+
+              <b-card-text v-else>Please select a message type from <strong>Advance</strong> section</b-card-text>
+            </b-card-body>
+          </b-collapse>
+        </b-card>
+
+        <!-- Confirm Section -->
+        <b-card no-body class="rounded-0">
+          <b-card-header header-tag="header" class="p-1" role="tab">
+            <b-button block v-b-toggle.accordion-confirm variant="light" size="sm"
+                      @click="accordionClicked('confirm')" class="text-left text-dark">
+              Confirm
+            </b-button>
+          </b-card-header>
+          <b-collapse id="accordion-confirm" v-model="showConfirm"
+                      accordion="create-message-accordion" role="tabpanel">
+            <b-card-body>
+              <b-card-text>
+                <div class="alert alert-danger" v-if="apiError">
+                  <ul class="list-unstyled">
+                    <li v-for="(fieldError, key) in apiError" :key="key">
+                      <b>[[ key|humanize ]]</b>
+                      <ul>
+                        <li v-for="error in fieldError">[[ error ]]</li>
+                      </ul>
+                    </li>
+                  </ul>
+                </div>
+                The message will be created after confirm. This will not be sent to anyone now. Are you sure you
+                want to create this message?
+              </b-card-text>
+              <b-button variant="primary" class="px-4" @click="submitData">Yes, Confirm</b-button>
+            </b-card-body>
+          </b-collapse>
+        </b-card>
+      </div>
+    </div>
+
+    <!-- Preview Column -->
+    <div class="col-md-6 d-flex justify-content-center">
+      <div class="mobile-preview-container mt-4">
+        <img src="{% static 'images/mobile-placeholder.svg' %}" alt="Mobile Preview">
+        <div class="preview-content">
+          <div v-if="menu === 'basic'" class="border border-dark rounded d-flex flex-row">
+            <img :src="basicImgPreviewUrl" class="notification-thumbnail p-1" alt="Notification thumbnail">
+            <div class="ml-1">
+              <div class="font-weight-bold">[[basicData.title]]</div>
+              <small>[[basicData.summary]]</small>
+            </div>
+          </div>
+          <div v-else-if="menu === 'advance' || (menu === 'details' && (advanceData.messageType==='LINK' || advanceData.messageType==='INFO'))">
+            <div class="font-weight-bold">[[basicData.title ? basicData.title : 'Title here']]</div>
+            <img :src="advanceFullImgUrl" v-if="advanceFullImgUrl" class="w-100" alt="Notification full image">
+            <div v-html="basicData.messageBody" class="mt-1"></div>
+            <div class="text-center">
+              <a v-if="advanceData.messageType==='LINK' && linkData.title" :href="linkData.url"
+                 class="px-4 mt-3 btn btn-primary btn-sm">[[linkData.title]]</a>
+            </div>
+          </div>
+          <div v-else-if="menu === 'details' && (advanceData.messageType==='IMAGE_UPLOAD')" class="img-upload-panel">
+            <div class="font-weight-bold">[[imgRequestData.title ? imgRequestData.title : 'Title here']]</div>
+            <small>[[imgRequestData.description]]</small>
+            <div class="border border-dark rounded-0 text-center py-2 w-100 my-2">
+              <i class="fas fa-camera"></i> Take photos
+            </div>
+            <img src="{% static 'images/img-thumbnail-placeholder.png' %}" class="w-100" alt="Preview image">
+            <div class="py-2 upload-photos-btn">Upload 5 photos</div>
+          </div>
+          <div v-else-if="menu === 'details' && (advanceData.messageType==='FILE_UPLOAD')" class="file-upload-panel">
+            <div v-for="f in fileRequestData.files" :key="f.title+f.file_type" class="border-bottom border-dark">
+              <div class="font-weight-bold">[[f.title]]</div>
+              <small>[[f.description]]</small>
+              <div class="border border-dark rounded-0 text-center py-2 w-100 my-2">
+                <i class="fas fa-camera"></i> Open camera
+              </div>
+            </div>
+          </div>
+          <div v-else-if="menu === 'details' && (advanceData.messageType==='POPUP_MESSAGE')" class="popup-bg">
+            <div class="bg-white card">
+              <img :src="advanceFullImgUrl" v-if="advanceFullImgUrl" class="w-100 card-img-top" alt="Popup notification image">
+              <div class="card-body p-2" v-show="popupData.displayType !== 'IMAGE_MESSAGE'">
+                <div class="card-title font-weight-bold">[[basicData.title ? basicData.title : '']]</div>
+                <div v-html="basicData.messageBody" class="card-text"></div>
+              </div>
+              <div class="card-body p-2">
+                <div class="text-right text-danger card-text">[[popupData.buttonText]]</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

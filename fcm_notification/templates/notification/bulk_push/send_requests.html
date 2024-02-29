@@ -1,0 +1,52 @@
+{% extends "notification/base.html" %}
+{% load notification_extras %}
+{% block 'main_content' %}
+  <div class="container">
+    {% include 'notification/common/notification_request.html' %}
+    {% include 'notification/common/notification_request_menu_navs.html' with nav='SEND_REQUEST' %}
+
+    {% if object_list %}
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+          <tr>
+            <th>Status</th>
+            <th>Total Receiver</th>
+            <th>Active Receiver</th>
+            <th>Chunk Size</th>
+            <th>Total Chunk</th>
+            <th>Total Success</th>
+            <th>Total Failed</th>
+            <th>Create Time</th>
+            <th>Update Time</th>
+            <th>Sent By</th>
+          </tr>
+          </thead>
+          <tbody>
+          {% for obj in  object_list %}
+            <tr>
+              {% if obj.get_status_display == 'SCHEDULED' %}
+                <td>{{ obj.get_status_display }} ({{ obj.schedule_time }})</td>
+              {% else %}
+                <td>{{ obj.get_status_display }}</td>
+              {% endif %}
+              <td>{{ obj.receiver_count }}</td>
+              <td>{{ obj.active_user_count }}</td>
+              <td>{{ obj.chunk_size }}</td>
+              <td>{{ obj.total_chunk }}</td>
+              <td>{{ obj.total_success }}</td>
+              <td>{{ obj.total_fail }}</td>
+              <td>{{ obj.created_at }}</td>
+              <td>{{ obj.updated_at }}</td>
+              <td>{{ obj.created_by }}</td>
+            </tr>
+          {% endfor %}
+          </tbody>
+      </table>
+      </div>
+    {% else %}
+      <div class="alert alert-info mt-3">This message is not sent yet.</div>
+    {% endif %}
+  </div>
+
+{% endblock %}

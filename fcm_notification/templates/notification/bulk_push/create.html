@@ -1,0 +1,54 @@
+{% extends "notification/base.html" %}
+
+{% block 'extra_head' %}
+<style type="text/css">
+.form-control-file {
+  border: 1px solid #ced4da;
+  padding: 5px;
+  border-radius: .25rem;
+  color: #495057;
+}
+</style>
+{% endblock %}
+
+{% block 'main_content' %}
+  <div class="container">
+    <h3 class="my-2 pb-1">Create bulk notification</h3>
+    <div class="row my-4">
+      <div class="col">
+        <form class="" action="" method="post" enctype="multipart/form-data">
+          {% csrf_token %}
+          <div class="form-group">
+            <label>Title of the campaign</label>
+            {{ form.title }}
+            {% if form.title.errors %}
+              {% for error in form.title.errors %}
+                <div class="text-danger small mb-2">{{ error }}</div>
+              {% endfor %}
+            {% endif %}
+          </div>
+          <div class="form-group">
+            <label>Select the message to send</label>
+            {{ form.message }}
+            {% if form.message.errors %}
+              {% for error in form.message.errors %}
+                <div class="text-danger small mb-2">{{ error }}</div>
+              {% endfor %}
+            {% endif %}
+          </div>
+          <div class="form-group">
+            <label>Upload file with comma separated mobile number (*.csv)</label>
+            {{ form.receiver_list }}
+            {% if form.receiver_list.errors %}
+              {% for error in form.receiver_list.errors %}
+                <div class="text-danger small mb-2">{{ error }}</div>
+              {% endfor %}
+            {% endif %}
+          </div>
+          <input type="hidden" name="receiver_type" value="FILE">
+          <button type="submit" class="btn btn-primary px-4">Submit</button>
+        </form>
+      </div>
+    </div>
+  </div>
+{% endblock %}

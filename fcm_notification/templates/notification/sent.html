@@ -1,0 +1,15 @@
+{% extends "notification/base.html" %}
+{% block 'main_content' %}
+<div class="container">
+    <div class="alert alert-success mt-3">
+        <h4 class="alert-heading">Success!</h4>
+        <p>The message has been successfully sent to <b>{{ mobile }}</b></p>
+    </div>
+    <p>
+        <a href="{% url 'send_message' message_id %}">Send this message to others</a>
+    </p>
+    <p>
+        <a href="{% url 'push_message_list' %}">Back to messages</a>
+    </p>
+</div>
+{% endblock %}

@@ -1,0 +1,95 @@
+{% extends "notification/base.html" %}
+{% load notification_extras %}
+{% block 'main_content' %}
+<div class="container">
+    <h3 class="my-2 pb-1">Bulk notifications</h3>
+    <div class="row">
+        <div class="col">
+            <form class="form-inline my-3" action="">
+                <label>Title</label>
+                {{ search_form.title }}
+                <button type="submit" class="btn btn-primary">Search</button>
+            </form>
+        </div>
+        <div class="col text-right my-3">
+            <a href="{% url 'create_bulk_message' %}" class="btn btn-primary">Add New</a>
+        </div>
+    </div>
+
+    {% if page_obj %}
+    <table class="table mt-3">
+        <thead>
+            <tr>
+                <th>Sl No</th>
+                <th>Bulk Request Id</th>
+                <th>Title</th>
+                <th>#Receivers</th>
+                <th>Status</th>
+                <th>Created at</th>
+                <th class="text-center">Option</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for msg_obj in  page_obj %}
+            <tr>
+                <td>{{ page_obj.start_index|add:forloop.counter0 }}</td>
+                <td class="text-center">{{ msg_obj.id }}</td>
+                <td>{{ msg_obj.title|default_if_none:'N/A' }}</td>
+                <td>{{ msg_obj.receiver_count }}</td>
+                <td>{{ msg_obj.status }}</td>
+                <td>{{ msg_obj.created_at }}</td>
+                <td class="pr-0 text-right">
+                  {% if msg_obj.get_status_display == 'READY' %}
+                    <a href="{% url 'send_bulk_message' msg_obj.id %}" class="btn btn-sm btn-success">Send</a>
+                  {% endif %}
+                    <a href="{% url 'bulk_message_send_request' msg_obj.id %}" class="btn btn-sm btn-primary">Details</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    
+    {% if page_obj.paginator.num_pages > 1 %}
+    <nav aria-label="Page navigation">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?{% url_replace page=1 %}">&laquo; First</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?{% url_replace page=page_obj.previous_page_number %}">Previous</a>
+            </li>
+            {% else %}
+            <li class="page-item disabled">
+                <a class="page-link" href="#" tabindex="-1" aria-disabled="true">Previous</a>
+            </li>
+            {% endif %}
+
+            {% for p in page_range %}
+            <li class="page-item {% if page_obj.number == p %}disabled{% endif %}">
+                <a class="page-link" href="?{% url_replace page=p %}">{{ p }}</a>
+            </li>
+            {% endfor %}
+            
+            {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?{% url_replace page=page_obj.next_page_number %}">Next</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?{% url_replace page=page_obj.paginator.num_pages %}">Last &raquo;</a>
+            </li>
+            {% else %}
+            <li class="page-item disabled">
+                <a class="page-link" href="#">Next</a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+
+    {% else %}
+    <div class="alert alert-warning">No bulk notification created.</div>
+    {% endif %}
+</div>
+
+{% endblock %}
